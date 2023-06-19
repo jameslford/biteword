@@ -10,8 +10,8 @@ export function activate(context: vscode.ExtensionContext) {
     const fname = fragments[fragments.length - 1];
     if (fname.match(regex)) {
       createHtmlFileFromMarkdown(e.uri);
+      compileDir(e.uri);
     }
-    compileDir(e.uri);
   });
 }
 

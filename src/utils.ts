@@ -98,6 +98,14 @@ export function createTextElementFromTag(tag: string, text: string) {
   return `<${tag.toLowerCase()}>${text}</${tag.toLowerCase()}>`;
 }
 
+export function safeWriteFile(path: string, data: string) {
+  try {
+    fs.writeFileSync(path, data);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
 export function createHtmlFileFromMarkdown(uri: vscode.Uri) {
   const mdText = fs.readFileSync(uri.path, "utf-8");
   const theme = getCurrentTheme();
@@ -107,12 +115,7 @@ export function createHtmlFileFromMarkdown(uri: vscode.Uri) {
   const fname = fragments[fragments.length - 1].replace(".md", ".html");
   const outPath = dirPath + "/" + fname;
   parser.renderPages().then((html) => {
-    fs.writeFile(outPath, html, (err) => {
-      if (err) {
-        console.log(err);
-        return;
-      }
-    });
+    safeWriteFile(outPath, html);
   });
 }
 
@@ -139,7 +142,7 @@ export function compileDir(uri: vscode.Uri) {
     const final = contents.join("<br>");
     if (vscode.workspace.workspaceFolders !== undefined) {
       const wf = dirPath + "/final.bw";
-      fs.writeFileSync(wf, final);
+      safeWriteFile(wf, final);
     }
   });
 }
