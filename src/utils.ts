@@ -112,8 +112,6 @@ export function createHtmlFileFromMarkdown(uri: vscode.Uri) {
         console.log(err);
         return;
       }
-      // compileDir(uri);
-      console.log("file written");
     });
   });
 }
@@ -125,8 +123,6 @@ function readFile(uri: vscode.Uri) {
 export function compileDir(uri: vscode.Uri) {
   const fragments = uri.path.split("/");
   const dirPath = fragments.slice(0, fragments.length - 1).join("/");
-  console.log("dirPath :>> ", dirPath);
-  // const fpattern = dirPath + '/[0-9999].*.html'
   const rpat = new vscode.RelativePattern(dirPath, "[0-9999].*.html");
   vscode.workspace.findFiles(rpat).then((fils) => {
     if (fils.length < 2) {
@@ -139,13 +135,7 @@ export function compileDir(uri: vscode.Uri) {
       const bfn = bf[bf.length - 1][0];
       return +afn - +bfn;
     });
-    console.log("files :>> ", files);
     const contents = files.map(readFile);
-    console.log("contents :>> ", contents);
-    // const final =
-    //   '<div class="pre-page">' +
-    //   contents.join('</div><div class="pre-page">') +
-    //   "</div>";
     const final = contents.join("<br>");
     if (vscode.workspace.workspaceFolders !== undefined) {
       const wf = dirPath + "/final.bw";
@@ -170,69 +160,3 @@ export function createHtmlBoilerPlate(content: string): string {
         </body>
     </html>`;
 }
-
-// export async function createHtmlFromMarkdown(uri: vscode.Uri) {
-//   // TODO will come back to this, but need marked
-//   // to treat single line brea=ks as <p> instead of <br>
-//   const html = parseMarkdownToHtml(fs.readFileSync(uri.path, "utf-8"));
-//   const fragments = uri.path.split("/");
-//   const dirPath = fragments.slice(0, fragments.length - 1).join("/");
-//   const fname = fragments[fragments.length - 1].replace(".md", ".html");
-//   const outPath = dirPath + "/" + fname;
-//   fs.writeFile(outPath, html, (err) => {
-//     if (err) {
-//       console.log(err);
-//       return;
-//     }
-//     compileDir(uri);
-//     console.log("file written");
-//   });
-// }
-
-// function parseMarkdownToHtml(markdownText: string) {
-//   // Replace headings (h1 - h6)
-//   markdownText = markdownText.replace(/#{1,6}\s(.+)/g, (match, title) => {
-//     const level = match.trim().length;
-//     return `<h${level}>${title}</h${level}>`;
-//   });
-//   // Replace bold text (**text**)
-//   markdownText = markdownText.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-//   // Replace italic text (*text*)
-//   markdownText = markdownText.replace(/\*(.+?)\*/g, "<em>$1</em>");
-//   // Replace links ([text](url))
-//   markdownText = markdownText.replace(
-//     /\[([^\]]+)\]\(([^)]+)\)/g,
-//     '<a href="$2">$1</a>'
-//   );
-//   // Replace inline code (`code`)
-//   markdownText = markdownText.replace(/`(.+?)`/g, "<code>$1</code>");
-//   // Replace blockquotes (>)
-//   markdownText = markdownText.replace(
-//     /^>(.*)$/gm,
-//     "<blockquote>$1</blockquote>"
-//   );
-//   // Replace unordered lists (*)
-//   markdownText = markdownText.replace(/^\*\s(.*)$/gm, "<ul><li>$1</li></ul>");
-//   // Replace ordered lists (1.)
-//   let counter = 0;
-//   markdownText = markdownText.replace(
-//     /^(\d+\.)\s(.*)$/gm,
-//     (match, number, content) => {
-//       if (counter === 0) {
-//         markdownText = markdownText.replace(/<\/ul>/g, "");
-//         markdownText += "<ol>";
-//       }
-//       counter++;
-//       return `<li>${content}</li>`;
-//     }
-//   );
-//   if (counter > 0) {
-//     markdownText += "</ol>";
-//   }
-//   // Replace double line breaks with paragraph breaks
-//   // XXX the problem here is that the \n\n will capture
-//   // single line breaks within them, which we then can't target
-//   markdownText = markdownText.replace(/[^\n\n].*.[^\n\n]/gm, "<p>$1</p>");
-//   // markdownText = markdownText.replace(/[^\n\n].*.[^\n\n]/gm, '<p>$1</p>');
-//   return markdownText;
-// }

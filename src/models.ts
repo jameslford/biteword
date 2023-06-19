@@ -57,7 +57,7 @@ export class Theme {
       /* margin-right: auto;  */
       display: flex;
       flex-wrap: wrap;
-      justify-content: space-evenly;
+      justify-content: center;
     }
     #toolbar {
       position: fixed;
@@ -110,19 +110,11 @@ export class Parser {
   }
 
   async domElements(): Promise<SplitElement[]> {
-    console.log("domElements");
     const browser = await puppeteer.launch();
-    console.log("browser :>> ", browser);
     const page = await browser.newPage();
-    console.log("page :>> ", page);
     await page.setContent(this.webpage);
-    // await page.addStyleTag({ path: "./assets/extension.css" });
     await page.addStyleTag({ content: this.theme.style() });
-    console.log("style added");
-    // await page.waitForNavigation({ waitUntil: "networkidle0" });
-
     const children = await page.$eval("#prePage", (el) => {
-      console.log("el :>> ", el);
       const children = Array.prototype.slice.call(el.children);
       return children.map((child: HTMLElement) => {
         return {
@@ -143,9 +135,7 @@ export class Parser {
   }
 
   _renderPages(elements: SplitElement[]): SplitElement[][] {
-    console.log("renderPages");
     const maxPageHeight = this.theme.innerHeight;
-    console.log("maxPageHeight :>> ", maxPageHeight);
     let remainingHeight = maxPageHeight;
     let page: SplitElement[] = [];
     let pages: SplitElement[][] = [];
@@ -154,21 +144,14 @@ export class Parser {
       const element = elements[i];
       // Element fits on page
       if (element.boundingBox.height < remainingHeight) {
-        console.log("element fits on page", element);
         page.push(element);
         remainingHeight -= element.boundingBox.height;
         continue;
       }
       // Element does not fit on page, but can be split
       if (tagToSplit.includes(element.tagName)) {
-        console.log(
-          "element does not fit on page, but can be split",
-          element,
-          remainingHeight
-        );
         const breakInfo = getTextBreak(this.theme, remainingHeight, element);
         if (breakInfo === null) {
-          console.log("line break is null");
           page.push(element);
           remainingHeight -= element.boundingBox.height;
           pages.push(page);
@@ -178,34 +161,20 @@ export class Parser {
         }
         const firstElement = breakInfo[0];
         const secondElement = breakInfo[1];
-        console.log("firstElement :>> ", firstElement);
-        console.log("secondElement :>> ", secondElement);
         page.push(firstElement);
         let remainingElements = elements.slice(i + 1);
         remainingElements = [secondElement, ...remainingElements];
-        console.log("remainingElements :>> ", remainingElements);
         const remainingPage = this._renderPages(remainingElements);
-        console.log("remainingPage :>> ", remainingPage);
         pages.push(page);
         const final = [...pages, ...remainingPage];
-        console.log("final :>> ", final);
         return final;
       }
       // Element does not fit on page, cannot be split, and cannot be moved to next page
       if (page.length === 0) {
-        console.log(
-          "element does not fit on page, cannot be split, and cannot be moved to next page",
-          element,
-          remainingHeight
-        );
+        // TODO: handle this case
         continue;
       }
       // Element does not fit on page, and cannot be split, but can be moved to next page
-      console.log(
-        "element does not fit on page, and cannot be split, but can be moved to next page",
-        element,
-        remainingHeight
-      );
       pages.push(page);
       page = [element];
       remainingHeight = maxPageHeight - element.boundingBox.height;
@@ -215,13 +184,10 @@ export class Parser {
   }
 
   async getPages(): Promise<SplitElement[][]> {
-    console.log("getPages");
     if (this.elements !== null && this.elements !== undefined) {
-      console.log("elements already exists");
       return Promise.resolve(this._renderPages(this.elements));
     }
     return this.domElements().then((elements) => {
-      console.log("elements :>> ", elements);
       this.elements = elements;
       return this._renderPages(elements);
     });
@@ -229,11 +195,9 @@ export class Parser {
 
   public async renderPages() {
     return this.getPages().then((pages) => {
-      console.log("pages :>> ", pages);
       const flattend = pages.map((page) => {
         return page.map((element) => element.html).join("");
       });
-      console.log("flattend :>> ", flattend);
       return `<div class="innerPage">${flattend.join(
         "</div><div class='innerPage'>"
       )}</div>`;

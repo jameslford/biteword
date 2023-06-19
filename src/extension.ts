@@ -5,15 +5,12 @@ import { BiteWordPreviewProvider } from "./preview";
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(BiteWordPreviewProvider.register(context));
   vscode.workspace.onDidSaveTextDocument((e) => {
-    console.log("onDidSaveTextDocument :>> ", e);
     const regex = /^[0-999].*.md$/gm;
     const fragments = e.fileName.split("/");
     const fname = fragments[fragments.length - 1];
     if (fname.match(regex)) {
-      console.log("found matching file", fname);
       createHtmlFileFromMarkdown(e.uri);
     }
-    console.log("about to compile", e.uri);
     compileDir(e.uri);
   });
 }

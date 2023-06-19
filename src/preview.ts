@@ -44,7 +44,6 @@ export class BiteWordPreviewProvider
     // editors (this happens for example when you split a custom editor)
     const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(
       (e) => {
-        // console.log('text document change', e)
         if (e.document.uri.toString() === document.uri.toString()) {
           updateWebview();
         }
