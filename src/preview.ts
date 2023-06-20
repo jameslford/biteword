@@ -44,13 +44,18 @@ export class BiteWordPreviewProvider
     // editors (this happens for example when you split a custom editor)
     const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(
       (e) => {
+        console.log("document changed", e);
+        console.log("document :>> ", document);
         if (e.document.uri.toString() === document.uri.toString()) {
+          console.log("matching document changed, updating webview");
+          // TODO the editor is not receiving the message from updateWebview when called here
           updateWebview();
         }
       }
     );
 
     const openDocument = vscode.workspace.onDidOpenTextDocument((e) => {
+      console.log("document opened", e, document);
       if (e.uri.toString() === document.uri.toString()) {
         updateWebview();
       }
@@ -58,6 +63,7 @@ export class BiteWordPreviewProvider
 
     // Make sure we get rid of the listener when our editor is closed.
     webviewPanel.onDidDispose(() => {
+      console.log("disposing webview");
       changeDocumentSubscription.dispose();
       openDocument.dispose();
     });

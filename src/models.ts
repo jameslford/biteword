@@ -71,6 +71,39 @@ export class Theme {
       align-content: space-around;
       height: 100vh;
     }
+
+    html {
+      box-sizing: border-box;
+      font-size: 13px;
+      margin: 0;
+      }
+
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+  
+    *,
+    *:before,
+    *:after {
+        box-sizing: inherit;
+    }
+
+    body,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    p,
+    ol,
+    ul {
+    margin: 0;
+    padding: 0;
+    font-weight: normal;
+    }
+
     #prePage, .innerPage {
       padding: ${this.marginTB}px ${this.marginLR}px;
       width: ${this.pageWidth}px;

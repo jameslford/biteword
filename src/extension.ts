@@ -9,8 +9,9 @@ export function activate(context: vscode.ExtensionContext) {
     const fragments = e.fileName.split("/");
     const fname = fragments[fragments.length - 1];
     if (fname.match(regex)) {
-      createHtmlFileFromMarkdown(e.uri);
-      compileDir(e.uri);
+      createHtmlFileFromMarkdown(e.uri).then(() => {
+        compileDir(e.uri);
+      });
     }
   });
 }

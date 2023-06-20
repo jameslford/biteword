@@ -106,7 +106,7 @@ export function safeWriteFile(path: string, data: string) {
   }
 }
 
-export function createHtmlFileFromMarkdown(uri: vscode.Uri) {
+export async function createHtmlFileFromMarkdown(uri: vscode.Uri) {
   const mdText = fs.readFileSync(uri.path, "utf-8");
   const theme = getCurrentTheme();
   const parser = new Parser(mdText, theme);
@@ -114,8 +114,9 @@ export function createHtmlFileFromMarkdown(uri: vscode.Uri) {
   const dirPath = fragments.slice(0, fragments.length - 1).join("/");
   const fname = fragments[fragments.length - 1].replace(".md", ".html");
   const outPath = dirPath + "/" + fname;
-  parser.renderPages().then((html) => {
+  return parser.renderPages().then((html) => {
     safeWriteFile(outPath, html);
+    return true;
   });
 }
 
@@ -123,12 +124,14 @@ function readFile(uri: vscode.Uri) {
   return fs.readFileSync(uri.path, "utf-8");
 }
 
-export function compileDir(uri: vscode.Uri) {
+export async function compileDir(uri: vscode.Uri) {
+  console.log("compiling dir");
   const fragments = uri.path.split("/");
   const dirPath = fragments.slice(0, fragments.length - 1).join("/");
   const rpat = new vscode.RelativePattern(dirPath, "[0-9999].*.html");
-  vscode.workspace.findFiles(rpat).then((fils) => {
-    if (fils.length < 2) {
+  return vscode.workspace.findFiles(rpat).then((fils) => {
+    if (fils.length === 0) {
+      console.log("no files found");
       return;
     }
     const files = fils.sort((a, b) => {
@@ -141,9 +144,11 @@ export function compileDir(uri: vscode.Uri) {
     const contents = files.map(readFile);
     const final = contents.join("<br>");
     if (vscode.workspace.workspaceFolders !== undefined) {
+      console.log("writing to", dirPath);
       const wf = dirPath + "/final.bw";
       safeWriteFile(wf, final);
     }
+    return final;
   });
 }
 
