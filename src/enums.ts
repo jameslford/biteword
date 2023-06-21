@@ -97,8 +97,8 @@ export interface Config {
 }
 
 export const DEFAULT_CONFIG: Config = {
-  bodyFont: FontFamily.arial,
-  headerFont: FontFamily.arial,
+  bodyFont: FontFamily.timesNewRoman,
+  headerFont: FontFamily.timesNewRoman,
   bodyFontSize: FontSizes.medium,
   headerFontSize: FontSizes.medium,
   paragraphIndent: 0,

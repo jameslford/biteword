@@ -58,6 +58,7 @@ export class Theme {
       flex-wrap: wrap;
       justify-content: center;
     }
+
     #toolbar {
       position: fixed;
       top: 0;
@@ -100,27 +101,38 @@ export class Theme {
     margin: 0;
     padding: 0;
     font-weight: normal;
+    letter-spacing: normal;
     }
 
     #prePage, .innerPage {
       padding: ${this.marginTB}px ${this.marginLR}px;
       width: ${this.pageWidth}px;
+      min-width: ${this.pageWidth}px;
       position: relative;
+      outline: 1px solid blue;
     }
+
     .innerPage {
       height: ${this.pageHeight}px;
     }
+
     p {
       text-indent: ${this.paragraphIndent}em;
     }
+
     p, span {
-      font-family: ${this.bodyFont};
+      font-family: '${this.bodyFont}';
       font-size: ${this.bodyFontSize}px;
       line-height: ${this.lineHeight}px;
+      display: block;
+      margin-block-start: 1em;
+      margin-block-end: 1em;
+      margin-inline-start: 0px;
+      margin-inline-end: 0px;
     }
 
     h1, h2, h3, h4, h5, h6 {
-      font-family: ${this.headerFont};
+      font-family: '${this.headerFont}';
     }
     `;
   }
@@ -144,8 +156,12 @@ export class Parser {
     this.context = context;
   }
 
+  get spacingBar(): string {
+    return `<div style="width: 595px; height: 6px; background-color: teal; position: absolute; top: 15px; left: 0px"></div>`;
+  }
+
   get webpage(): any {
-    const content = `<div id="toobar"></div><div id="page"><div id="prePage">${this.rawHtml}</div></div>`;
+    const content = `<div id="toobar"></div><div id="page"><div id="prePage">${this.spacingBar} ${this.rawHtml}</div></div>`;
     return createHtmlBoilerPlate(content);
   }
 
@@ -158,16 +174,54 @@ export class Parser {
     return vscode.workspace.fs.readFile(onDiskPath).then((data) => {
       return data.toString();
     });
-    // return fs.readFileSync("../assets/vscode.css", "utf-8");
+  }
+
+  get toolkitUriScript(): Thenable<string> {
+    const onDiskPath = vscode.Uri.joinPath(
+      this.context.extensionUri,
+      "node_modules",
+      "@vscode",
+      "webview-ui-toolkit",
+      "dist",
+      "toolkit.js"
+    );
+    return vscode.workspace.fs.readFile(onDiskPath).then((data) => {
+      return data.toString();
+    });
   }
 
   async domElements(): Promise<SplitElement[]> {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
+    await page.setViewport({
+      width: this.theme.pageWidth * 2,
+      height: this.theme.pageHeight,
+    });
     await page.setContent(this.webpage);
-    await page.addStyleTag({ content: this.theme.style() });
+    // await page.addScriptTag({ content: await this.toolkitUriScript });
     const vscodecss = await this.vscodeCssFileContent;
     await page.addStyleTag({ content: vscodecss });
+    const myStyle = this.theme.style();
+    console.log("myStyle :>> ", myStyle);
+    await page.addStyleTag({ content: myStyle });
+    // const demoPageCss =
+    //   "body {min-width: 1200px} p {font-size: 12px; font-family: Arial} #prePage {background: lightblue; width: 595px; height: 842px;}";
+    const demoPageCss =
+      'p {font-family: Times, "Times New Roman", serif; line-height: 18px; letter-spacing: .9; font-size: 11.5px;}';
+    await page.addStyleTag({ content: demoPageCss });
+    // page.screenshot({ path: "./example.png" });
+    try {
+      // Capture screenshot and save it in the current folder:
+      await page.screenshot({
+        path: `/home/jford/projects/extension-biteword/scrapingbee_homepage.jpg`,
+        fullPage: true,
+      });
+    } catch (err) {
+      console.log(`Error: ${err.message}`);
+    } finally {
+      // await browser.close();
+      console.log(`Screenshot has been captured successfully`);
+    }
     const children = await page.$eval("#prePage", (el) => {
       const children = Array.prototype.slice.call(el.children);
       return children.map((child: HTMLElement) => {
@@ -185,6 +239,7 @@ export class Parser {
         };
       });
     });
+    await browser.close();
     return children;
   }
 
@@ -256,7 +311,7 @@ export class Parser {
       const flattend = pages.map((page) => {
         return page.map((element) => element.html).join("");
       });
-      return `<div class="innerPage">${flattend.join(
+      return `<div class="innerPage">${this.spacingBar} ${flattend.join(
         "</div><div class='innerPage'>"
       )}</div>`;
     });

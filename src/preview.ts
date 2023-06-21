@@ -129,12 +129,12 @@ export class BiteWordPreviewProvider
           <!--
           Use a content security policy to only allow loading images from https or from our extension directory,
           and only allow scripts that have a specific nonce.
+          <script type="module" nonce="${nonce}" src="${toolkitUri}"></script>
           -->
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <link href="${styleResetUri}" rel="stylesheet" />
           <link href="${styleVSCodeUri}" rel="stylesheet" />
           <link href="${styleMainUri}" rel="stylesheet" />
-          <script type="module" nonce="${nonce}" src="${toolkitUri}"></script>
           <title>biteWord</title>
           <style>
           ${theme.style()}

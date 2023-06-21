@@ -61,8 +61,8 @@ export function getTextBreak(
         bold: bold,
         italic: italic,
       }) + spaceWidth;
-    console.log("curLineWidth :>> ", curLineWidth);
-    console.log("word, wordWidth :>> ", word, wordWidth);
+    // console.log("curLineWidth :>> ", curLineWidth);
+    // console.log("word, wordWidth :>> ", word, wordWidth);
     if (curLineWidth + wordWidth > lineWidth) {
       const currentHeight = lines.length * lineHeight + lineHeight;
       if (currentHeight > remainingHeight) {
