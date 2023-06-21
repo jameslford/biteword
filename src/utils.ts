@@ -146,7 +146,13 @@ export async function compileDir(uri: vscode.Uri) {
     if (vscode.workspace.workspaceFolders !== undefined) {
       console.log("writing to", dirPath);
       const wf = dirPath + "/final.bw";
-      safeWriteFile(wf, final);
+      // safeWriteFile(wf, final);
+      vscode.workspace.fs.writeFile(uri.with({ path: wf }), Buffer.from(final));
+      // vscode.workspace.openTextDocument(wf).then((doc) => {
+
+      //   // console.log('doc.isDirty :>> ', doc.isDirty);
+
+      // });
     }
     return final;
   });

@@ -202,6 +202,7 @@ export class Parser {
         const final = [...pages, ...remainingPage];
         return final;
       }
+      // TODO: handle case for lists, blockquotes and other splittable elements
       // Element does not fit on page, cannot be split, and cannot be moved to next page
       if (page.length === 0) {
         // TODO: handle this case

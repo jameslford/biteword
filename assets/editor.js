@@ -1,4 +1,7 @@
+// @ts-check
+
 (function () {
+  // @ts-ignore
   const vscode = acquireVsCodeApi();
   const page = document.getElementById("page");
   const toolbar = document.getElementById("toolbar");
@@ -8,6 +11,7 @@
   errorContainer.style.display = "none";
 
   function updateContent(/** @type {string} */ text) {
+    console.log("updateContent, text: ", text.slice(0, 100));
     page.innerHTML = text;
   }
 

@@ -22,7 +22,10 @@
           {
             "filenamePattern": "*.bw"
           }
-        ]
+        ],
+        "options": {
+          "retainContextWhenHidden": true
+        }
       }
     ],
     "languages": [

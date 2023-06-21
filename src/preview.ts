@@ -9,7 +9,12 @@ export class BiteWordPreviewProvider
     const providerRegistration = vscode.window.registerCustomEditorProvider(
       BiteWordPreviewProvider.viewType,
       provider,
-      {}
+      {
+        webviewOptions: {
+          enableFindWidget: true,
+          retainContextWhenHidden: true,
+        },
+      }
     );
     return providerRegistration;
   }
@@ -31,10 +36,16 @@ export class BiteWordPreviewProvider
     );
 
     function updateWebview() {
-      webviewPanel.webview.postMessage({
-        type: "update",
-        text: document.getText(),
-      });
+      const text = document.getText();
+      console.log("updating webview in preview.ts");
+      webviewPanel.webview
+        .postMessage({
+          type: "update",
+          text: text,
+        })
+        .then((fulfilled) => {
+          console.log("fulfilled :>> ", fulfilled);
+        });
     }
 
     // Hook up event handlers so that we can synchronize the webview with the text document.
@@ -70,6 +81,7 @@ export class BiteWordPreviewProvider
 
     // Receive message from the webview.
     webviewPanel.webview.onDidReceiveMessage((e) => {
+      console.log("received message", e);
       switch (e.type) {
         case "change":
           this.updateTextDocument(document, e.value);
