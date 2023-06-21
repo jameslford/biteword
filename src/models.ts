@@ -1,19 +1,16 @@
 import * as puppeteer from "puppeteer";
+import * as vscode from "vscode";
 import { marked } from "marked";
+import * as fs from "fs";
 import {
   FontFamily,
   PageLayout,
   Config,
   SplitElement,
-  TagNames,
   PAGE_SIZES,
   DEFAULT_CONFIG,
 } from "./enums";
-import {
-  getTextBreak,
-  createTextElementFromTag,
-  createHtmlBoilerPlate,
-} from "./utils";
+import { getTextBreak, createHtmlBoilerPlate } from "./utils";
 
 export class Theme {
   headerFont: FontFamily;
@@ -26,6 +23,7 @@ export class Theme {
   pageWidth: number;
   marginLR: number;
   marginTB: number;
+  paragraphIndent: number;
 
   public constructor(
     layout: PageLayout = PAGE_SIZES.A4,
@@ -41,6 +39,7 @@ export class Theme {
     this.pageWidth = layout.width;
     this.marginLR = layout.marginLR;
     this.marginTB = layout.marginTB;
+    this.paragraphIndent = config.paragraphIndent;
   }
 
   get lineHeight(): number {
@@ -51,10 +50,10 @@ export class Theme {
     return `
     #page {
       border: 1px solid red;
-      /* width: 97%; */
+      width: 97%;
       margin-top: 10px;
       margin-left: 4cm;
-      /* margin-right: auto;  */
+      margin-right: auto;
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
@@ -74,7 +73,6 @@ export class Theme {
 
     html {
       box-sizing: border-box;
-      font-size: 13px;
       margin: 0;
       }
 
@@ -112,6 +110,9 @@ export class Theme {
     .innerPage {
       height: ${this.pageHeight}px;
     }
+    p {
+      text-indent: ${this.paragraphIndent}em;
+    }
     p, span {
       font-family: ${this.bodyFont};
       font-size: ${this.bodyFontSize}px;
@@ -130,11 +131,17 @@ export class Parser {
   rawHtml: string;
   theme: Theme;
   elements?: SplitElement[];
+  context: vscode.ExtensionContext;
 
-  public constructor(markdown: string, theme: Theme) {
+  public constructor(
+    markdown: string,
+    theme: Theme,
+    context: vscode.ExtensionContext
+  ) {
     this.markdown = markdown;
     this.rawHtml = marked(markdown);
     this.theme = theme;
+    this.context = context;
   }
 
   get webpage(): any {
@@ -142,11 +149,25 @@ export class Parser {
     return createHtmlBoilerPlate(content);
   }
 
+  get vscodeCssFileContent(): Thenable<string> {
+    const onDiskPath = vscode.Uri.joinPath(
+      this.context.extensionUri,
+      "assets",
+      "vscode.css"
+    );
+    return vscode.workspace.fs.readFile(onDiskPath).then((data) => {
+      return data.toString();
+    });
+    // return fs.readFileSync("../assets/vscode.css", "utf-8");
+  }
+
   async domElements(): Promise<SplitElement[]> {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
     await page.setContent(this.webpage);
     await page.addStyleTag({ content: this.theme.style() });
+    const vscodecss = await this.vscodeCssFileContent;
+    await page.addStyleTag({ content: vscodecss });
     const children = await page.$eval("#prePage", (el) => {
       const children = Array.prototype.slice.call(el.children);
       return children.map((child: HTMLElement) => {
@@ -169,13 +190,16 @@ export class Parser {
 
   _renderPages(elements: SplitElement[]): SplitElement[][] {
     const maxPageHeight = this.theme.innerHeight;
+    console.log("maxPageHeight :>> ", maxPageHeight);
     let remainingHeight = maxPageHeight;
+    // console.log("remainingHeight :>> ", remainingHeight);
     let page: SplitElement[] = [];
     let pages: SplitElement[][] = [];
     const tagToSplit = ["P", "SPAN"];
     for (let i = 0; i < elements.length; i++) {
       const element = elements[i];
       // Element fits on page
+      console.log("element :>> ", element.boundingBox.height, element.text);
       if (element.boundingBox.height < remainingHeight) {
         page.push(element);
         remainingHeight -= element.boundingBox.height;

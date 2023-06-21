@@ -30,6 +30,9 @@ export class BiteWordPreviewProvider
     // Setup initial content for the webview
     webviewPanel.webview.options = {
       enableScripts: true,
+      localResourceRoots: [
+        vscode.Uri.joinPath(this.context.extensionUri, "assets"),
+      ],
     };
     webviewPanel.webview.html = await this.getHtmlForWebview(
       webviewPanel.webview

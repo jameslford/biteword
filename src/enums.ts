@@ -93,6 +93,7 @@ export interface Config {
   headerFont: FontFamily;
   bodyFontSize: number;
   headerFontSize: number;
+  paragraphIndent: number;
 }
 
 export const DEFAULT_CONFIG: Config = {
@@ -100,6 +101,7 @@ export const DEFAULT_CONFIG: Config = {
   headerFont: FontFamily.arial,
   bodyFontSize: FontSizes.medium,
   headerFontSize: FontSizes.medium,
+  paragraphIndent: 0,
 };
 
 enum PagesSizeNames {

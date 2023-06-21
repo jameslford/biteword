@@ -35,7 +35,10 @@ export function getTextBreak(
   element: SplitElement
 ): SplitElement[] | null {
   const lineWidth = theme.innerWidth;
+  console.log("lineWidth :>> ", lineWidth);
+  console.log("remainingHeight :>> ", remainingHeight);
   const lineHeight = theme.lineHeight;
+  console.log("lineHeight :>> ", lineHeight);
   const fontFamily = theme.bodyFont.valueOf();
   const fontSize = theme.bodyFontSize;
   const text = element.text;
@@ -44,6 +47,7 @@ export function getTextBreak(
   let line = "";
   let lines = [];
   const spaceWidth = pixelWidth(" ", { font: fontFamily, size: fontSize });
+  console.log("spaceWidth :>> ", spaceWidth);
   let curLineWidth = 0;
   for (let i = 0; i < words.length; i++) {
     const word = words[i];
@@ -57,6 +61,8 @@ export function getTextBreak(
         bold: bold,
         italic: italic,
       }) + spaceWidth;
+    console.log("curLineWidth :>> ", curLineWidth);
+    console.log("word, wordWidth :>> ", word, wordWidth);
     if (curLineWidth + wordWidth > lineWidth) {
       const currentHeight = lines.length * lineHeight + lineHeight;
       if (currentHeight > remainingHeight) {
@@ -106,10 +112,13 @@ export function safeWriteFile(path: string, data: string) {
   }
 }
 
-export async function createHtmlFileFromMarkdown(uri: vscode.Uri) {
+export async function createHtmlFileFromMarkdown(
+  uri: vscode.Uri,
+  context: vscode.ExtensionContext
+) {
   const mdText = fs.readFileSync(uri.path, "utf-8");
   const theme = getCurrentTheme();
-  const parser = new Parser(mdText, theme);
+  const parser = new Parser(mdText, theme, context);
   const fragments = uri.path.split("/");
   const dirPath = fragments.slice(0, fragments.length - 1).join("/");
   const fname = fragments[fragments.length - 1].replace(".md", ".html");
@@ -146,13 +155,7 @@ export async function compileDir(uri: vscode.Uri) {
     if (vscode.workspace.workspaceFolders !== undefined) {
       console.log("writing to", dirPath);
       const wf = dirPath + "/final.bw";
-      // safeWriteFile(wf, final);
       vscode.workspace.fs.writeFile(uri.with({ path: wf }), Buffer.from(final));
-      // vscode.workspace.openTextDocument(wf).then((doc) => {
-
-      //   // console.log('doc.isDirty :>> ', doc.isDirty);
-
-      // });
     }
     return final;
   });
