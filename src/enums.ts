@@ -79,13 +79,8 @@ export interface SplitElement {
   html: string;
   text: string;
   tagName: string;
-  boundingBox: {
-    height: number;
-    width?: number;
-    offsetHeight?: number;
-    offsetTop?: number;
-    scrollHeight?: number;
-  };
+  height: number;
+  width?: number;
 }
 
 export interface Config {

@@ -200,17 +200,13 @@ export class TextElement {
     const firstText = brokenFirst.map((line) => line.join(" ")).join(" ");
     const secondText = brokenSecond.map((line) => line.join(" ")).join(" ");
     const firstElement: SplitElement = {
-      boundingBox: {
-        height: remainingHeight,
-      },
+      height: remainingHeight,
       html: `<p>${firstText}</p>`,
       text: firstText,
       tagName: "P",
     };
     const secondElement: SplitElement = {
-      boundingBox: {
-        height: this.height - remainingHeight,
-      },
+      height: this.height - remainingHeight,
       html: `<span>${secondText}</span>`,
       text: secondText,
       tagName: "SPAN",
@@ -285,30 +281,12 @@ export class Parser {
     await page.addStyleTag({ content: await this.vscodeCssFileContent });
     const myStyle = this.theme.style();
     await page.addStyleTag({ content: myStyle });
-    try {
-      // Capture screenshot and save it in the current folder:
-      await page.screenshot({
-        path: `/home/jford/projects/extension-biteword/scrapingbee_homepage.jpg`,
-        fullPage: true,
-      });
-    } catch (err) {
-      // @ts-ignore
-      console.log(`Error: ${err.message}`);
-    } finally {
-      // await browser.close();
-      console.log(`Screenshot has been captured successfully`);
-    }
     const children = await page.$eval("#prePage", (el) => {
       const children = Array.prototype.slice.call(el.children);
       return children.map((child: HTMLElement) => {
         return {
-          boundingBox: {
-            offsetHeight: child.offsetHeight,
-            offsetTop: child.offsetTop,
-            scrollHeight: child.scrollHeight,
-            height: child.clientHeight,
-            width: child.clientWidth,
-          },
+          height: child.clientHeight,
+          width: child.clientWidth,
           html: child.outerHTML,
           text: child.innerText,
           tagName: child.tagName,
@@ -321,7 +299,6 @@ export class Parser {
 
   _renderPages(elements: SplitElement[]): SplitElement[][] {
     const maxPageHeight = this.theme.innerHeight;
-    console.log("maxPageHeight :>> ", maxPageHeight);
     let remainingHeight = maxPageHeight;
     let page: SplitElement[] = [];
     let pages: SplitElement[][] = [];
@@ -337,7 +314,6 @@ export class Parser {
           element.html
         );
         const elementHeight = textElement.height;
-        console.log("text element :>> ", elementHeight, element.text);
         if (elementHeight < remainingHeight) {
           page.push(element);
           remainingHeight -= elementHeight;
@@ -352,10 +328,9 @@ export class Parser {
         const final = [...pages, ...remainingPage];
         return final;
       }
-      console.log("element :>> ", element.boundingBox, element.text);
-      if (element.boundingBox.height < remainingHeight) {
+      if (element.height < remainingHeight) {
         page.push(element);
-        remainingHeight -= element.boundingBox.height;
+        remainingHeight -= element.height;
         continue;
       }
 
@@ -368,7 +343,7 @@ export class Parser {
       // Element does not fit on page, and cannot be split, but can be moved to next page
       pages.push(page);
       page = [element];
-      remainingHeight = maxPageHeight - element.boundingBox.height;
+      remainingHeight = maxPageHeight - element.height;
     }
     pages.push(page);
     return pages;

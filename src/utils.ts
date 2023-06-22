@@ -1,8 +1,7 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
-var pixelWidth = require("string-pixel-width");
 import { Parser, Theme } from "./models";
-import { DEFAULT_CONFIG, PAGE_SIZES, SplitElement, TagNames } from "./enums";
+import { DEFAULT_CONFIG, PAGE_SIZES } from "./enums";
 
 export function getNonce() {
   let text = "";
@@ -27,10 +26,6 @@ export function getUri(
   pathList: string[]
 ) {
   return webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, ...pathList));
-}
-
-export function createTextElementFromTag(tag: string, text: string) {
-  return `<${tag.toLowerCase()}>${text}</${tag.toLowerCase()}>`;
 }
 
 export function safeWriteFile(path: string, data: string) {
@@ -63,7 +58,6 @@ function readFile(uri: vscode.Uri) {
 }
 
 export async function compileDir(uri: vscode.Uri) {
-  console.log("compiling dir");
   const fragments = uri.path.split("/");
   const dirPath = fragments.slice(0, fragments.length - 1).join("/");
   const rpat = new vscode.RelativePattern(dirPath, "[0-9999].*.html");
@@ -82,7 +76,6 @@ export async function compileDir(uri: vscode.Uri) {
     const contents = files.map(readFile);
     const final = contents.join("<br>");
     if (vscode.workspace.workspaceFolders !== undefined) {
-      console.log("writing to", dirPath);
       const wf = dirPath + "/final.bw";
       vscode.workspace.fs.writeFile(uri.with({ path: wf }), Buffer.from(final));
     }
