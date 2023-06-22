@@ -1,4 +1,7 @@
+// @ts-check
+
 (function () {
+  // @ts-ignore
   const vscode = acquireVsCodeApi();
   const page = document.getElementById("page");
   const toolbar = document.getElementById("toolbar");
@@ -8,11 +11,13 @@
   errorContainer.style.display = "none";
 
   function updateContent(/** @type {string} */ text) {
+    console.log("updateContent, text: ", text.slice(0, 100));
     page.innerHTML = text;
   }
 
   // Handle messages sent from the extension to the webview
   window.addEventListener("message", (event) => {
+    console.log("message received, event.data: ", event);
     const message = event.data; // The json data that the extension sent
     switch (message.type) {
       case "update":

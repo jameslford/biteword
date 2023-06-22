@@ -9,7 +9,12 @@ export class BiteWordPreviewProvider
     const providerRegistration = vscode.window.registerCustomEditorProvider(
       BiteWordPreviewProvider.viewType,
       provider,
-      {}
+      {
+        webviewOptions: {
+          enableFindWidget: true,
+          retainContextWhenHidden: true,
+        },
+      }
     );
     return providerRegistration;
   }
@@ -25,16 +30,25 @@ export class BiteWordPreviewProvider
     // Setup initial content for the webview
     webviewPanel.webview.options = {
       enableScripts: true,
+      localResourceRoots: [
+        vscode.Uri.joinPath(this.context.extensionUri, "assets"),
+      ],
     };
     webviewPanel.webview.html = await this.getHtmlForWebview(
       webviewPanel.webview
     );
 
     function updateWebview() {
-      webviewPanel.webview.postMessage({
-        type: "update",
-        text: document.getText(),
-      });
+      const text = document.getText();
+      console.log("updating webview in preview.ts");
+      webviewPanel.webview
+        .postMessage({
+          type: "update",
+          text: text,
+        })
+        .then((fulfilled) => {
+          console.log("fulfilled :>> ", fulfilled);
+        });
     }
 
     // Hook up event handlers so that we can synchronize the webview with the text document.
@@ -44,13 +58,18 @@ export class BiteWordPreviewProvider
     // editors (this happens for example when you split a custom editor)
     const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(
       (e) => {
+        console.log("document changed", e);
+        console.log("document :>> ", document);
         if (e.document.uri.toString() === document.uri.toString()) {
+          console.log("matching document changed, updating webview");
+          // TODO the editor is not receiving the message from updateWebview when called here
           updateWebview();
         }
       }
     );
 
     const openDocument = vscode.workspace.onDidOpenTextDocument((e) => {
+      console.log("document opened", e, document);
       if (e.uri.toString() === document.uri.toString()) {
         updateWebview();
       }
@@ -58,12 +77,14 @@ export class BiteWordPreviewProvider
 
     // Make sure we get rid of the listener when our editor is closed.
     webviewPanel.onDidDispose(() => {
+      console.log("disposing webview");
       changeDocumentSubscription.dispose();
       openDocument.dispose();
     });
 
     // Receive message from the webview.
     webviewPanel.webview.onDidReceiveMessage((e) => {
+      console.log("received message", e);
       switch (e.type) {
         case "change":
           this.updateTextDocument(document, e.value);
@@ -108,12 +129,12 @@ export class BiteWordPreviewProvider
           <!--
           Use a content security policy to only allow loading images from https or from our extension directory,
           and only allow scripts that have a specific nonce.
+          <script type="module" nonce="${nonce}" src="${toolkitUri}"></script>
           -->
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <link href="${styleResetUri}" rel="stylesheet" />
           <link href="${styleVSCodeUri}" rel="stylesheet" />
           <link href="${styleMainUri}" rel="stylesheet" />
-          <script type="module" nonce="${nonce}" src="${toolkitUri}"></script>
           <title>biteWord</title>
           <style>
           ${theme.style()}

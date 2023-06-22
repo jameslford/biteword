@@ -3,14 +3,16 @@ import { createHtmlFileFromMarkdown, compileDir } from "./utils";
 import { BiteWordPreviewProvider } from "./preview";
 
 export function activate(context: vscode.ExtensionContext) {
-  context.subscriptions.push(BiteWordPreviewProvider.register(context));
+  const provider = BiteWordPreviewProvider.register(context);
+  context.subscriptions.push();
   vscode.workspace.onDidSaveTextDocument((e) => {
     const regex = /^[0-999].*.md$/gm;
     const fragments = e.fileName.split("/");
     const fname = fragments[fragments.length - 1];
     if (fname.match(regex)) {
-      createHtmlFileFromMarkdown(e.uri);
-      compileDir(e.uri);
+      createHtmlFileFromMarkdown(e.uri, context).then(() => {
+        compileDir(e.uri);
+      });
     }
   });
 }

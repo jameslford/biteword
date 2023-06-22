@@ -1,8 +1,7 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
-var pixelWidth = require("string-pixel-width");
 import { Parser, Theme } from "./models";
-import { DEFAULT_CONFIG, PAGE_SIZES, SplitElement, TagNames } from "./enums";
+import { DEFAULT_CONFIG, PAGE_SIZES } from "./enums";
 
 export function getNonce() {
   let text = "";
@@ -29,75 +28,6 @@ export function getUri(
   return webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, ...pathList));
 }
 
-export function getTextBreak(
-  theme: Theme,
-  remainingHeight: number,
-  element: SplitElement
-): SplitElement[] | null {
-  const lineWidth = theme.innerWidth;
-  const lineHeight = theme.lineHeight;
-  const fontFamily = theme.bodyFont.valueOf();
-  const fontSize = theme.bodyFontSize;
-  const text = element.text;
-
-  const words = text.split(" ");
-  let line = "";
-  let lines = [];
-  const spaceWidth = pixelWidth(" ", { font: fontFamily, size: fontSize });
-  let curLineWidth = 0;
-  for (let i = 0; i < words.length; i++) {
-    const word = words[i];
-    // TODO: support bold and italic
-    const bold = false;
-    const italic = false;
-    const wordWidth =
-      pixelWidth(word, {
-        font: fontFamily,
-        size: fontSize,
-        bold: bold,
-        italic: italic,
-      }) + spaceWidth;
-    if (curLineWidth + wordWidth > lineWidth) {
-      const currentHeight = lines.length * lineHeight + lineHeight;
-      if (currentHeight > remainingHeight) {
-        const firstWords = words.slice(0, i - 1);
-        const secondWords = words.slice(i - 1);
-        const secondHeight = element.boundingBox.height - currentHeight;
-        return [
-          {
-            text: firstWords.join(" "),
-            html: createTextElementFromTag(
-              element.tagName,
-              firstWords.join(" ")
-            ),
-            tagName: element.tagName,
-            boundingBox: { height: currentHeight },
-          },
-          {
-            text: secondWords.join(" "),
-            html: createTextElementFromTag(
-              TagNames.span,
-              secondWords.join(" ")
-            ),
-            tagName: TagNames.span,
-            boundingBox: { height: secondHeight },
-          },
-        ];
-      }
-      lines.push(line);
-      curLineWidth = 0;
-      line = "";
-    }
-    line += " " + word;
-    curLineWidth += wordWidth;
-  }
-  return null;
-}
-
-export function createTextElementFromTag(tag: string, text: string) {
-  return `<${tag.toLowerCase()}>${text}</${tag.toLowerCase()}>`;
-}
-
 export function safeWriteFile(path: string, data: string) {
   try {
     fs.writeFileSync(path, data);
@@ -106,16 +36,20 @@ export function safeWriteFile(path: string, data: string) {
   }
 }
 
-export function createHtmlFileFromMarkdown(uri: vscode.Uri) {
+export async function createHtmlFileFromMarkdown(
+  uri: vscode.Uri,
+  context: vscode.ExtensionContext
+) {
   const mdText = fs.readFileSync(uri.path, "utf-8");
   const theme = getCurrentTheme();
-  const parser = new Parser(mdText, theme);
+  const parser = new Parser(mdText, theme, context);
   const fragments = uri.path.split("/");
   const dirPath = fragments.slice(0, fragments.length - 1).join("/");
   const fname = fragments[fragments.length - 1].replace(".md", ".html");
   const outPath = dirPath + "/" + fname;
-  parser.renderPages().then((html) => {
+  return parser.renderPages().then((html) => {
     safeWriteFile(outPath, html);
+    return true;
   });
 }
 
@@ -123,12 +57,13 @@ function readFile(uri: vscode.Uri) {
   return fs.readFileSync(uri.path, "utf-8");
 }
 
-export function compileDir(uri: vscode.Uri) {
+export async function compileDir(uri: vscode.Uri) {
   const fragments = uri.path.split("/");
   const dirPath = fragments.slice(0, fragments.length - 1).join("/");
   const rpat = new vscode.RelativePattern(dirPath, "[0-9999].*.html");
-  vscode.workspace.findFiles(rpat).then((fils) => {
-    if (fils.length < 2) {
+  return vscode.workspace.findFiles(rpat).then((fils) => {
+    if (fils.length === 0) {
+      console.log("no files found");
       return;
     }
     const files = fils.sort((a, b) => {
@@ -142,8 +77,9 @@ export function compileDir(uri: vscode.Uri) {
     const final = contents.join("<br>");
     if (vscode.workspace.workspaceFolders !== undefined) {
       const wf = dirPath + "/final.bw";
-      safeWriteFile(wf, final);
+      vscode.workspace.fs.writeFile(uri.with({ path: wf }), Buffer.from(final));
     }
+    return final;
   });
 }
 
