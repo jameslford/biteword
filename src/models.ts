@@ -1,7 +1,7 @@
 import * as puppeteer from "puppeteer";
 import * as vscode from "vscode";
 import { marked } from "marked";
-import * as fs from "fs";
+var pixelWidth = require("string-pixel-width");
 import {
   FontFamily,
   PageLayout,
@@ -10,7 +10,7 @@ import {
   PAGE_SIZES,
   DEFAULT_CONFIG,
 } from "./enums";
-import { getTextBreak, createHtmlBoilerPlate } from "./utils";
+import { createHtmlBoilerPlate } from "./utils";
 
 export class Theme {
   headerFont: FontFamily;
@@ -101,7 +101,7 @@ export class Theme {
     margin: 0;
     padding: 0;
     font-weight: normal;
-    letter-spacing: normal;
+    letter-spacing: 0;
     }
 
     #prePage, .innerPage {
@@ -125,8 +125,8 @@ export class Theme {
       font-size: ${this.bodyFontSize}px;
       line-height: ${this.lineHeight}px;
       display: block;
-      margin-block-start: 1em;
-      margin-block-end: 1em;
+      margin-block-start: 0px;
+      margin-block-end: 0px;
       margin-inline-start: 0px;
       margin-inline-end: 0px;
     }
@@ -135,6 +135,87 @@ export class Theme {
       font-family: '${this.headerFont}';
     }
     `;
+  }
+}
+
+export class TextElement {
+  theme: Theme;
+  text: string;
+  html: string;
+  tagName: string;
+  words: string[];
+  brokenlines: string[][];
+
+  public constructor(
+    theme: Theme,
+    text: string,
+    tagName: string,
+    html: string
+  ) {
+    this.theme = theme;
+    this.text = text;
+    this.tagName = tagName;
+    this.html = html;
+    this.words = text.split(" ");
+    this.brokenlines = this.breakLines();
+  }
+
+  breakLines(): string[][] {
+    let line = [];
+    let lines = [];
+    const spaceWidth = pixelWidth(" ", {
+      font: this.theme.bodyFont.valueOf(),
+      size: this.theme.bodyFontSize,
+    });
+    let curLineWidth = 0;
+    for (let i = 0; i < this.words.length; i++) {
+      const word = this.words[i];
+      const wordWidth =
+        pixelWidth(word, {
+          font: this.theme.bodyFont.valueOf(),
+          size: this.theme.bodyFontSize,
+        }) + spaceWidth;
+      if (curLineWidth + wordWidth > this.theme.innerWidth) {
+        lines.push(line);
+        line = [];
+        curLineWidth = 0;
+      }
+      line.push(word);
+      curLineWidth += wordWidth;
+    }
+    if (line.length > 0) {
+      lines.push(line);
+    }
+    return lines;
+  }
+
+  get height(): number {
+    return this.brokenlines.length * this.theme.lineHeight;
+  }
+
+  public splitText(remainingHeight: number): SplitElement[] {
+    const linesRemaining = Math.floor(remainingHeight / this.theme.lineHeight);
+    const brokenFirst = this.brokenlines.slice(0, linesRemaining);
+    const brokenSecond = this.brokenlines.slice(linesRemaining);
+    const firstText = brokenFirst.map((line) => line.join(" ")).join(" ");
+    const secondText = brokenSecond.map((line) => line.join(" ")).join(" ");
+    const firstElement: SplitElement = {
+      boundingBox: {
+        height: remainingHeight,
+      },
+      html: `<p>${firstText}</p>`,
+      text: firstText,
+      tagName: "P",
+    };
+    const secondElement: SplitElement = {
+      boundingBox: {
+        height: this.height - remainingHeight,
+      },
+      html: `<span>${secondText}</span>`,
+      text: secondText,
+      tagName: "SPAN",
+    };
+    return [firstElement, secondElement];
   }
 }
 
@@ -156,12 +237,8 @@ export class Parser {
     this.context = context;
   }
 
-  get spacingBar(): string {
-    return `<div style="width: 595px; height: 6px; background-color: teal; position: absolute; top: 15px; left: 0px"></div>`;
-  }
-
   get webpage(): any {
-    const content = `<div id="toobar"></div><div id="page"><div id="prePage">${this.spacingBar} ${this.rawHtml}</div></div>`;
+    const content = `<div id="toobar"></div><div id="page"><div id="prePage">${this.rawHtml}</div></div>`;
     return createHtmlBoilerPlate(content);
   }
 
@@ -190,6 +267,12 @@ export class Parser {
     });
   }
 
+  public getTextLength(text: string) {
+    const fontFamily = this.theme.bodyFont.valueOf();
+    const fontSize = this.theme.bodyFontSize;
+    return pixelWidth(text, { font: fontFamily, size: fontSize });
+  }
+
   async domElements(): Promise<SplitElement[]> {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
@@ -198,18 +281,10 @@ export class Parser {
       height: this.theme.pageHeight,
     });
     await page.setContent(this.webpage);
-    // await page.addScriptTag({ content: await this.toolkitUriScript });
-    const vscodecss = await this.vscodeCssFileContent;
-    await page.addStyleTag({ content: vscodecss });
+    await page.addScriptTag({ content: await this.toolkitUriScript });
+    await page.addStyleTag({ content: await this.vscodeCssFileContent });
     const myStyle = this.theme.style();
-    console.log("myStyle :>> ", myStyle);
     await page.addStyleTag({ content: myStyle });
-    // const demoPageCss =
-    //   "body {min-width: 1200px} p {font-size: 12px; font-family: Arial} #prePage {background: lightblue; width: 595px; height: 842px;}";
-    const demoPageCss =
-      'p {font-family: Times, "Times New Roman", serif; line-height: 18px; letter-spacing: .9; font-size: 11.5px;}';
-    await page.addStyleTag({ content: demoPageCss });
-    // page.screenshot({ path: "./example.png" });
     try {
       // Capture screenshot and save it in the current folder:
       await page.screenshot({
@@ -217,6 +292,7 @@ export class Parser {
         fullPage: true,
       });
     } catch (err) {
+      // @ts-ignore
       console.log(`Error: ${err.message}`);
     } finally {
       // await browser.close();
@@ -247,40 +323,42 @@ export class Parser {
     const maxPageHeight = this.theme.innerHeight;
     console.log("maxPageHeight :>> ", maxPageHeight);
     let remainingHeight = maxPageHeight;
-    // console.log("remainingHeight :>> ", remainingHeight);
     let page: SplitElement[] = [];
     let pages: SplitElement[][] = [];
     const tagToSplit = ["P", "SPAN"];
     for (let i = 0; i < elements.length; i++) {
       const element = elements[i];
       // Element fits on page
-      console.log("element :>> ", element.boundingBox.height, element.text);
-      if (element.boundingBox.height < remainingHeight) {
-        page.push(element);
-        remainingHeight -= element.boundingBox.height;
-        continue;
-      }
-      // Element does not fit on page, but can be split
       if (tagToSplit.includes(element.tagName)) {
-        const breakInfo = getTextBreak(this.theme, remainingHeight, element);
-        if (breakInfo === null) {
+        const textElement = new TextElement(
+          this.theme,
+          element.text,
+          element.tagName,
+          element.html
+        );
+        const elementHeight = textElement.height;
+        console.log("text element :>> ", elementHeight, element.text);
+        if (elementHeight < remainingHeight) {
           page.push(element);
-          remainingHeight -= element.boundingBox.height;
-          pages.push(page);
-          page = [];
-          remainingHeight = maxPageHeight;
+          remainingHeight -= elementHeight;
           continue;
         }
-        const firstElement = breakInfo[0];
-        const secondElement = breakInfo[1];
-        page.push(firstElement);
+        const splitElements = textElement.splitText(remainingHeight);
+        page.push(splitElements[0]);
         let remainingElements = elements.slice(i + 1);
-        remainingElements = [secondElement, ...remainingElements];
+        remainingElements = [splitElements[1], ...remainingElements];
         const remainingPage = this._renderPages(remainingElements);
         pages.push(page);
         const final = [...pages, ...remainingPage];
         return final;
       }
+      console.log("element :>> ", element.boundingBox, element.text);
+      if (element.boundingBox.height < remainingHeight) {
+        page.push(element);
+        remainingHeight -= element.boundingBox.height;
+        continue;
+      }
+
       // TODO: handle case for lists, blockquotes and other splittable elements
       // Element does not fit on page, cannot be split, and cannot be moved to next page
       if (page.length === 0) {
@@ -311,7 +389,7 @@ export class Parser {
       const flattend = pages.map((page) => {
         return page.map((element) => element.html).join("");
       });
-      return `<div class="innerPage">${this.spacingBar} ${flattend.join(
+      return `<div class="innerPage">${flattend.join(
         "</div><div class='innerPage'>"
       )}</div>`;
     });
