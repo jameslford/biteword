@@ -1,3 +1,4 @@
+// TODO create transform for actual html tag
 export enum TagNames {
   h1 = "H1",
   h2 = "H2",
@@ -41,6 +42,7 @@ export enum TagNames {
   font = "FONT",
 }
 
+// TODO: add more fonts & transforms to the name
 export enum FontFamily {
   andaleMono = "Andale Mono",
   arial = "Arial",
@@ -60,12 +62,22 @@ export enum FontFamily {
   tahoma = "Tahoma",
 }
 
+// TODO: separate font sizes for header and body
 export enum FontSizes {
   small = 10,
   medium = 12,
   large = 14,
   xlarge = 16,
   xxlarge = 18,
+}
+
+export enum HeaderSizes {
+  h1 = 32,
+  h2 = 30,
+  h3 = 28,
+  h4 = 26,
+  h5 = 24,
+  h6 = 22,
 }
 
 export interface PageLayout {
@@ -99,6 +111,7 @@ export const DEFAULT_CONFIG: Config = {
   paragraphIndent: 0,
 };
 
+// TODO: add more page sizes
 enum PagesSizeNames {
   A4 = "A4",
   A5 = "A5",
