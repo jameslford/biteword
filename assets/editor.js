@@ -5,6 +5,8 @@
   const vscode = acquireVsCodeApi();
   const page = document.getElementById("page");
   const toolbar = document.getElementById("toolbar");
+  const printButton = document.getElementById("printButton");
+  const refreshButton = document.getElementById("refreshButton");
   const errorContainer = document.createElement("div");
   document.body.appendChild(errorContainer);
   errorContainer.className = "error";
@@ -26,6 +28,18 @@
         vscode.setState({ text });
         return;
     }
+  });
+
+  printButton.addEventListener("click", (event) => {
+    vscode.postMessage({
+      type: "print",
+    });
+  });
+
+  refreshButton.addEventListener("click", (event) => {
+    vscode.postMessage({
+      type: "change",
+    });
   });
 
   // Webviews are normally torn down when not visible and re-created when they become visible again.

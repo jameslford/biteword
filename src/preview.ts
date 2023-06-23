@@ -87,7 +87,9 @@ export class BiteWordPreviewProvider
       console.log("received message", e);
       switch (e.type) {
         case "change":
-          this.updateTextDocument(document, e.value);
+          updateWebview();
+        case "print":
+          console.log("print");
       }
     });
     updateWebview();
@@ -142,6 +144,8 @@ export class BiteWordPreviewProvider
         </head>
         <body>
           <div id="toolbar">
+          <button id="printButton">Print</button>
+          <button id="refreshButton">Refresh</button>
           </div>
           <div id="page"></div>
               <script nonce="${nonce}" src="${scriptUri}"></script>
@@ -152,13 +156,13 @@ export class BiteWordPreviewProvider
   /**
    * Write out the json to a given document.
    */
-  private updateTextDocument(document: vscode.TextDocument, text: any) {
-    const edit = new vscode.WorkspaceEdit();
-    edit.replace(
-      document.uri,
-      new vscode.Range(0, 0, document.lineCount, 0),
-      text
-    );
-    return vscode.workspace.applyEdit(edit);
-  }
+  // private updateTextDocument(document: vscode.TextDocument, text: any) {
+  //   const edit = new vscode.WorkspaceEdit();
+  //   edit.replace(
+  //     document.uri,
+  //     new vscode.Range(0, 0, document.lineCount, 0),
+  //     text
+  //   );
+  //   return vscode.workspace.applyEdit(edit);
+  // }
 }

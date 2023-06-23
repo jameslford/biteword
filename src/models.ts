@@ -9,6 +9,7 @@ import {
   SplitElement,
   PAGE_SIZES,
   DEFAULT_CONFIG,
+  HEADER_SIZES,
 } from "./enums";
 import { createHtmlBoilerPlate } from "./utils";
 
@@ -18,7 +19,6 @@ export class Theme {
   innerHeight: number;
   innerWidth: number;
   bodyFontSize: number;
-  headerFontSize: number;
   pageHeight: number;
   pageWidth: number;
   marginLR: number;
@@ -34,9 +34,9 @@ export class Theme {
     this.innerWidth = layout.width - layout.marginLR * 2;
     this.innerHeight = layout.height - layout.marginTB * 2;
     this.bodyFontSize = config.bodyFontSize;
-    this.headerFontSize = config.headerFontSize;
     this.pageHeight = layout.height;
     this.pageWidth = layout.width;
+
     this.marginLR = layout.marginLR;
     this.marginTB = layout.marginTB;
     this.paragraphIndent = config.paragraphIndent;
@@ -49,14 +49,12 @@ export class Theme {
   public style(): string {
     return `
     #page {
-      border: 1px solid red;
-      width: 97%;
-      margin-top: 10px;
-      margin-left: 4cm;
+      margin-left: 3cm;
       margin-right: auto;
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
+      align-items: center;
     }
 
     #toolbar {
@@ -64,9 +62,11 @@ export class Theme {
       top: 0;
       left: 0;
       margin: 0;
-      width: 4cm;
+      padding: 30px 20px;
+      width: 3cm;
       background-color: rgb(43, 73, 99);
       display: flex;
+      flex-direction: column;
       align-items: center;
       align-content: space-around;
       height: 100vh;
@@ -88,6 +88,32 @@ export class Theme {
         box-sizing: inherit;
     }
 
+    h1 {
+      font-size: ${HEADER_SIZES.h1.fontSize}px;
+      line-height: ${HEADER_SIZES.h1.lineHeight}px;
+    }
+    h2 {
+      font-size: ${HEADER_SIZES.h2.fontSize}px;
+      line-height: ${HEADER_SIZES.h2.lineHeight}px;
+    }
+    h3 {
+      font-size: ${HEADER_SIZES.h3.fontSize}px;
+      line-height: ${HEADER_SIZES.h3.lineHeight}px;
+    }
+    h4 {
+      font-size: ${HEADER_SIZES.h4.fontSize}px;
+      line-height: ${HEADER_SIZES.h4.lineHeight}px;
+    }
+    h5 {
+      font-size: ${HEADER_SIZES.h5.fontSize}px;
+      line-height: ${HEADER_SIZES.h5.lineHeight}px;
+    }
+    h6 {
+      font-size: ${HEADER_SIZES.h6.fontSize}px;
+      line-height: ${HEADER_SIZES.h6.lineHeight}px;
+    }
+
+
     body,
     h1,
     h2,
@@ -95,21 +121,30 @@ export class Theme {
     h4,
     h5,
     h6,
-    p,
-    ol,
-    ul {
+    p
+    {
     margin: 0;
     padding: 0;
     font-weight: normal;
     letter-spacing: 0;
     }
 
+    ul, ol {
+      font-weight: normal;
+      letter-spacing: 0;
+      list-style-type: none;
+    }
+
+    .innerPage > ul, .innerPage > ol {
+      padding-left: 0;
+    }
+
+
     #prePage, .innerPage {
       padding: ${this.marginTB}px ${this.marginLR}px;
       width: ${this.pageWidth}px;
       min-width: ${this.pageWidth}px;
       position: relative;
-      outline: 1px solid blue;
     }
 
     .innerPage {
@@ -118,6 +153,10 @@ export class Theme {
 
     p {
       text-indent: ${this.paragraphIndent}em;
+    }
+    pre {
+      margin:0;
+      padding: 15px 0;
     }
 
     p, span {
@@ -159,6 +198,43 @@ export class TextElement {
     this.words = text.split(" ");
     this.brokenlines = this.breakLines();
   }
+  get fontSize(): number {
+    switch (this.tagName) {
+      case "H1":
+        return HEADER_SIZES.h1.fontSize;
+      case "H2":
+        return HEADER_SIZES.h2.fontSize;
+      case "H3":
+        return HEADER_SIZES.h3.fontSize;
+      case "H4":
+        return HEADER_SIZES.h4.fontSize;
+      case "H5":
+        return HEADER_SIZES.h5.fontSize;
+      case "H6":
+        return HEADER_SIZES.h6.fontSize;
+      default:
+        return this.theme.bodyFontSize;
+    }
+  }
+
+  get lineHeight(): number {
+    switch (this.tagName) {
+      case "H1":
+        return HEADER_SIZES.h1.lineHeight;
+      case "H2":
+        return HEADER_SIZES.h2.lineHeight;
+      case "H3":
+        return HEADER_SIZES.h3.lineHeight;
+      case "H4":
+        return HEADER_SIZES.h4.lineHeight;
+      case "H5":
+        return HEADER_SIZES.h5.lineHeight;
+      case "H6":
+        return HEADER_SIZES.h6.lineHeight;
+      default:
+        return this.theme.lineHeight;
+    }
+  }
 
   breakLines(): string[][] {
     let line = [];
@@ -173,7 +249,7 @@ export class TextElement {
       const wordWidth =
         pixelWidth(word, {
           font: this.theme.bodyFont.valueOf(),
-          size: this.theme.bodyFontSize,
+          size: this.fontSize,
         }) + spaceWidth;
       if (curLineWidth + wordWidth > this.theme.innerWidth) {
         lines.push(line);
@@ -190,7 +266,7 @@ export class TextElement {
   }
 
   get height(): number {
-    return this.brokenlines.length * this.theme.lineHeight;
+    return this.brokenlines.length * this.lineHeight;
   }
 
   public splitText(remainingHeight: number): SplitElement[] {
@@ -302,7 +378,7 @@ export class Parser {
     let remainingHeight = maxPageHeight;
     let page: SplitElement[] = [];
     let pages: SplitElement[][] = [];
-    const tagToSplit = ["P", "SPAN"];
+    const tagToSplit = ["P", "SPAN", "H1", "H2", "H3", "H4", "H5", "H6"];
     for (let i = 0; i < elements.length; i++) {
       const element = elements[i];
       // Element fits on page
@@ -312,6 +388,11 @@ export class Parser {
           element.text,
           element.tagName,
           element.html
+        );
+        console.log(
+          "text element",
+          element.text.slice(0, 30),
+          textElement.height
         );
         const elementHeight = textElement.height;
         if (elementHeight < remainingHeight) {
@@ -328,6 +409,7 @@ export class Parser {
         const final = [...pages, ...remainingPage];
         return final;
       }
+      console.log("element", element, element.height);
       if (element.height < remainingHeight) {
         page.push(element);
         remainingHeight -= element.height;

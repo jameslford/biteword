@@ -3,9 +3,13 @@
     color: black; */
 
     background-color: rgba(255, 255, 255, 0.035);
-    margin-bottom: 5px;
+    margin: 0 5px 10px 5px;
+
+}
+
+.innerPage, #toolbar {
     box-shadow: 5px 5px 10px 10px rgba(12, 12, 12, 0.07),
-        2px 2px 11px -4px rgba(0, 0, 0, 0.60);
+    2px 2px 11px -4px rgba(0, 0, 0, 0.60);
     height: 29.7cm;
 }
 
