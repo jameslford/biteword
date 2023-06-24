@@ -152,7 +152,7 @@ export class Theme {
     }
 
     p {
-      text-indent: ${this.paragraphIndent}em;
+      text-indent: ${this.paragraphIndent}px;
     }
     pre {
       margin:0;
@@ -243,7 +243,7 @@ export class TextElement {
       font: this.theme.bodyFont.valueOf(),
       size: this.theme.bodyFontSize,
     });
-    let curLineWidth = 0;
+    let curLineWidth = this.theme.paragraphIndent;
     for (let i = 0; i < this.words.length; i++) {
       const word = this.words[i];
       const wordWidth =

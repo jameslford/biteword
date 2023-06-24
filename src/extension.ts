@@ -4,7 +4,8 @@ import { BiteWordPreviewProvider } from "./preview";
 
 export function activate(context: vscode.ExtensionContext) {
   const provider = BiteWordPreviewProvider.register(context);
-  context.subscriptions.push();
+  context.subscriptions.push(provider);
+
   vscode.workspace.onDidSaveTextDocument((e) => {
     const regex = /^[0-999].*.md$/gm;
     const fragments = e.fileName.split("/");

@@ -155,5 +155,5 @@ export const DEFAULT_CONFIG: Config = {
   bodyFont: FontFamily.arial,
   headerFont: FontFamily.arial,
   bodyFontSize: FontSizes.medium,
-  paragraphIndent: 0,
+  paragraphIndent: 30,
 };
