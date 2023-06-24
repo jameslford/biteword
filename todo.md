@@ -20,3 +20,4 @@
 - add support for tables
 <!-- - add support for code blocks -->
 - add support for images
+- consider markdown-wasm

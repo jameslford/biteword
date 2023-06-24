@@ -45,7 +45,7 @@ export async function createHtmlFileFromMarkdown(
   const parser = new Parser(mdText, theme, context);
   const fragments = uri.path.split("/");
   const dirPath = fragments.slice(0, fragments.length - 1).join("/");
-  const fname = fragments[fragments.length - 1].replace(".md", ".bw");
+  const fname = fragments[fragments.length - 1].replace(".bd", ".bw");
   const outPath = dirPath + "/" + fname;
   return parser.renderPages().then((html) => {
     safeWriteFile(outPath, html);

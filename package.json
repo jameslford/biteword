@@ -34,10 +34,15 @@
         "extensions": [
           ".bw"
         ],
+        "aliases": [
+          "BiteScript",
+          "bitescript"
+        ],
         "icon": {
           "light": "./assets/images/bt.svg",
           "dark": "./assets/images/bt.svg"
         }
+        
       },
       {
         "id": "biteSource",
