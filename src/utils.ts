@@ -45,7 +45,7 @@ export async function createHtmlFileFromMarkdown(
   const parser = new Parser(mdText, theme, context);
   const fragments = uri.path.split("/");
   const dirPath = fragments.slice(0, fragments.length - 1).join("/");
-  const fname = fragments[fragments.length - 1].replace(".md", ".html");
+  const fname = fragments[fragments.length - 1].replace(".bd", ".bw");
   const outPath = dirPath + "/" + fname;
   return parser.renderPages().then((html) => {
     safeWriteFile(outPath, html);
@@ -60,7 +60,7 @@ function readFile(uri: vscode.Uri) {
 export async function compileDir(uri: vscode.Uri) {
   const fragments = uri.path.split("/");
   const dirPath = fragments.slice(0, fragments.length - 1).join("/");
-  const rpat = new vscode.RelativePattern(dirPath, "[0-9999].*.html");
+  const rpat = new vscode.RelativePattern(dirPath, "[0-9999].*.bw");
   return vscode.workspace.findFiles(rpat).then((fils) => {
     if (fils.length === 0) {
       console.log("no files found");
