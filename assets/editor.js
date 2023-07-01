@@ -1,4 +1,8 @@
 // @ts-check
+// import html2canvas from "html2canvas";
+// const html2canvas = require("html2canvas");
+// import jsPDF from "jspdf";
+// const jsPDF = require("jspdf");
 
 (function () {
   // @ts-ignore
@@ -31,9 +35,18 @@
   });
 
   printButton.addEventListener("click", (event) => {
-    vscode.postMessage({
-      type: "print",
+    html2canvas(page).then((canvas) => {
+      var img = canvas.toDataURL("image/png");
+      vscode.postMessage({
+        type: "print",
+        html: img,
+      });
     });
+    // print();
+    // vscode.postMessage({
+    //   type: "print",
+    //   html: page?.outerHTML,
+    // });
   });
 
   refreshButton.addEventListener("click", (event) => {

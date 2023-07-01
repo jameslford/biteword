@@ -145,6 +145,7 @@ export class Theme {
       width: ${this.pageWidth}px;
       min-width: ${this.pageWidth}px;
       position: relative;
+      outline: 1px solid red;
     }
 
     .innerPage {

@@ -42,7 +42,6 @@
           "light": "./assets/images/bt.svg",
           "dark": "./assets/images/bt.svg"
         }
-        
       },
       {
         "id": "biteSource",
@@ -80,7 +79,10 @@
   },
   "dependencies": {
     "@vscode/webview-ui-toolkit": "^1.2.2",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^2.5.1",
     "marked": "^5.1.0",
+    "printer": "^0.4.0",
     "puppeteer": "^20.7.2",
     "string-pixel-width": "^1.11.0"
   }
